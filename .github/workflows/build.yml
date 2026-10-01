@@ -1,0 +1,26 @@
+name: Build JARVIS
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+      - uses: android-actions/setup-android@v3
+      - run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "include ':app'" > settings.gradle
+          echo "plugins { id 'com.android.application' version '8.1.0' apply false }" > build.gradle
+          mkdir -p app/src/main/java/com/bostanz/jarvis
+          echo "plugins { id 'com.android.application' } android { namespace 'com.bostanz.jarvis'; compileSdk 34; defaultConfig { applicationId 'com.bostanz.jarvis'; minSdk 21; targetSdk 34 } }" > app/build.gradle
+          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="JARVIS"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+          echo 'package com.bostanz.jarvis; import android.app.Activity; import android.os.Bundle; import android.widget.TextView; public class MainActivity extends Activity { protected void onCreate(Bundle b){ super.onCreate(b); TextView t=new TextView(this); t.setText("JARVIS BOS"); setContentView(t); } }' > app/src/main/java/com/bostanz/jarvis/MainActivity.java
+          gradle wrapper --gradle-version 8.0
+         ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: APK-JARVIS
+          path: app/build/outputs/apk/debug/*.apk
